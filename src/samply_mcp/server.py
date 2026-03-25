@@ -203,14 +203,15 @@ async def create_session(
 
     need_approval = session.state.value == "pending_approval"
     if need_approval:
-        next_steps = """
-The user needs to approve the session. Tell them. 
-Then you can start profiling with the run tool.
+        next_steps = f"""
+The user needs to approve the session. Tell them to:
+1. check the session with `show {session.id}`
+2. approve the session with `approve {session.id}` if good
+Once approved, you can start profiling with the `run` tool.
 """
     else:
         next_steps = """
-No approval necessary.
-Start profiling with the run tool.
+No approval necessary. Start profiling with the `run` tool.
 """
 
     return {
@@ -307,9 +308,7 @@ async def run(
 
     if session.state.value != "approved":
         return {
-            "error": (
-                f"Session '{session_id}' is not approved (current state: {session.state.value})"
-            ),
+            "error": (f"Session '{session_id}' is not approved (current state: {session.state.value})"),
             "session_id": session_id,
             "state": session.state.value,
         }
@@ -317,8 +316,7 @@ async def run(
     is_ok, level = check_perf_paranoid()
     if not is_ok:
         return {
-            "error": f"kernel.perf_event_paranoid is {level} (must be <= 1 for profiling).\n"
-            "Run: sudo sysctl -w kernel.perf_event_paranoid=1",
+            "error": f"kernel.perf_event_paranoid is {level} (must be <= 1 for profiling).\nRun: sudo sysctl -w kernel.perf_event_paranoid=1",
             "session_id": session_id,
         }
 
