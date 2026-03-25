@@ -32,6 +32,8 @@ WORKFLOW
 3. get_hot_functions() -> identify performance hotspots
 4. get_callers(name)/get_callees(name) -> understand call relationships
 5. Make optimizations, run again, compare_runs() to measure improvement
+IMPORTANT: Try to reuse sessions as much as possible to reduce the number of times the user needs to approve sessions.
+  Thus getting the setup correctly is important.
 
 ANALYSIS TIPS
 =============
@@ -648,6 +650,9 @@ async def compare_runs(
         dict with duration_delta_s, duration_delta_pct, sample_count_a/b,
         improved (functions that got faster), regressed (functions that got slower),
         new_hotspots, and resolved (functions that were hot but no longer are).
+
+        Positive delta values mean run B is slower than baseline (regression).
+        Negative delta values mean run B is faster than baseline (improvement).
     """
     run_a, binary_path_a, error_a = _get_run(session_id, run_id_a)
     if error_a:
