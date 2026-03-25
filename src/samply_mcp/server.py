@@ -7,6 +7,7 @@ import stat
 import sys
 import threading
 from datetime import datetime
+from functools import lru_cache
 from pathlib import Path
 
 from fastmcp import FastMCP
@@ -416,14 +417,21 @@ def _get_run(session_id: str, run_id: int | None) -> tuple[Run | None, Path | No
     return None, None, {"error": f"Run '{run_id}' not found in session '{session_id}'"}
 
 
-def _load_profile(run: Run, binary_path: Path | None = None) -> GeckoProfile | dict:
-    if not run.profile_path.exists():
-        return {"error": f"Profile file not found: {run.profile_path}"}
+@lru_cache(maxsize=8)
+def _load_profile_cached(profile_path_str: str, binary_path_str: str | None) -> GeckoProfile | dict:
+    profile_path = Path(profile_path_str)
+    binary_path = Path(binary_path_str) if binary_path_str else None
+    if not profile_path.exists():
+        return {"error": f"Profile file not found: {profile_path}"}
     try:
         symbolizer = Symbolizer(binary_path) if binary_path else None
-        return parse_gecko_profile(run.profile_path, symbolizer=symbolizer)
+        return parse_gecko_profile(profile_path, symbolizer=symbolizer)
     except ParseError as e:
         return {"error": f"Failed to parse profile: {e}"}
+
+
+def _load_profile(run: Run, binary_path: Path | None = None) -> GeckoProfile | dict:
+    return _load_profile_cached(str(run.profile_path), str(binary_path) if binary_path else None)
 
 
 @mcp.tool()
