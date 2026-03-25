@@ -13,3 +13,4 @@ build/
 htmlcov/
 *.so
 .DS_Store
+.samply-mcp-history
